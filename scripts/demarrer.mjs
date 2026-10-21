@@ -192,7 +192,12 @@ try {
     })
   }
   if (kit.scripts?.migrate) {
-    migration = lancer('npm', ['run', 'migrate'])
+    // Sous Windows, npm est un script npm.cmd que spawn ne trouve pas sans
+    // shell : on relance npm par Node, avec le chemin que npm fournit lui-même.
+    const npm = process.env.npm_execpath
+    migration = npm
+      ? lancer(process.execPath, [npm, 'run', 'migrate'])
+      : lancer('npm', ['run', 'migrate'])
     const code = await new Promise((resoudre) => migration.once('exit', resoudre))
     if (code !== 0) throw new Error('Migration échouée; le serveur ne sera pas démarré.')
   }
